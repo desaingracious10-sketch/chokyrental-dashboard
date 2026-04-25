@@ -4,6 +4,12 @@ import { TODAY, addDays, diffDays } from "../lib/format";
 
 const AppContext = createContext(null);
 
+function readStorage(key, fallback) {
+  if (typeof window === "undefined") return fallback;
+  const value = window.localStorage.getItem(key);
+  return value ?? fallback;
+}
+
 function makeInvoiceNumber(index) {
   return `INV-2026-${String(index + 1).padStart(3, "0")}`;
 }
@@ -132,22 +138,25 @@ function appReducer(state, action) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const [theme, setTheme] = useState(() => localStorage.getItem("choky-theme") ?? "light");
-  const [session, setSession] = useState(() => localStorage.getItem("choky-session") === "active");
+  const [theme, setTheme] = useState(() => readStorage("choky-theme", "light"));
+  const [session, setSession] = useState(() => readStorage("choky-session", "inactive") === "active");
   const [toasts, setToasts] = useState([]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || typeof window === "undefined") return;
     document.documentElement.classList.toggle("theme-dark", theme === "dark");
-    localStorage.setItem("choky-theme", theme);
+    window.localStorage.setItem("choky-theme", theme);
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem("choky-session", session ? "active" : "inactive");
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("choky-session", session ? "active" : "inactive");
   }, [session]);
 
   const pushToast = useCallback((toast) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setToasts((current) => [...current, { id, duration: 3000, ...toast }]);
+    if (typeof window === "undefined") return;
     window.setTimeout(() => {
       setToasts((current) => current.filter((item) => item.id !== id));
     }, toast.duration ?? 3000);

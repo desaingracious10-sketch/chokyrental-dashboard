@@ -275,7 +275,7 @@ export default function Dashboard() {
               item.status === "in-progress" && isSameMonth(addMonths(today, -1), startOfDay(item.date)),
           ).length,
         ),
-        path: `/maintenance?vehicleId=${vehicle.id}`,
+        path: "/maintenance",
       },
       {
         key: "today-income",
